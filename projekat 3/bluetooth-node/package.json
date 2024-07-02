@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "main": "arduino.js",
   "scripts": {
+    "start": "node arduino.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@vliegwerk/arduino-nano-33-ble": "^1.0.1"
+    "@vliegwerk/arduino-nano-33-ble": "^1.0.1",
+    "mqtt": "^5.7.3",
+    "ws": "^8.17.1"
   }
 }
