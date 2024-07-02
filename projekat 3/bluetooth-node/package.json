@@ -1,0 +1,14 @@
+{
+  "name": "bluetooth-node",
+  "version": "1.0.0",
+  "main": "arduino.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@vliegwerk/arduino-nano-33-ble": "^1.0.1"
+  }
+}
