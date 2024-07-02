@@ -48,23 +48,26 @@
 #include <Arduino_LSM9DS1.h>
 
 
-static const char *greeting = "Hello World!";
+// static const char *greeting = "Hello World!";
 
-BLEService greetingService("180C");  // User defined service
-BLEService accelerometerService("180D");  // User defined service 2
+const char *deviceServiceUuid = "e905de3e-0000-44de-92c4-bb6e04fb0212";
+const char *deviceServiceCharacteristicUuid = "19b10010-e8f2-537e-4f6c-d104768a1214";
+
+// BLEService greetingService("180C");       // User defined service
+BLEService accelerometerService(deviceServiceUuid);  // User defined service 2
 
 // Initalizing global variables for sensor data to pass onto BLE
 String p, t, m, a;
 
-BLEStringCharacteristic greetingCharacteristic("2A56",        // standard 16-bit characteristic UUID
-                                               BLERead, 13);  // remote clients will only be able to read this
+// BLEStringCharacteristic greetingCharacteristic("2A56",        // standard 16-bit characteristic UUID
+//                                                BLERead, 13);  // remote clients will only be able to read this
 
 // BLE Characteristics
 // Syntax: BLE<DATATYPE>Characteristic <NAME>(<UUID>, <PROPERTIES>, <DATA LENGTH>)
-BLEStringCharacteristic ble_pressure("2A56", BLERead | BLENotify, 13);
-BLEStringCharacteristic ble_temperature("2A57", BLERead | BLENotify, 13);
+// BLEStringCharacteristic ble_pressure("2A56", BLERead | BLENotify, 13);
+// BLEStringCharacteristic ble_temperature("2A57", BLERead | BLENotify, 13);
 // BLEStringCharacteristic ble_magnetic("2A58", BLERead | BLENotify, 20);
-BLEStringCharacteristic ble_accelerometer("2A58", BLERead | BLENotify, 20);
+BLEStringCharacteristic ble_accelerometer(deviceServiceCharacteristicUuid, BLERead | BLEWrite | BLENotify, 20);
 
 // Function prototype
 // void readValues();
@@ -124,17 +127,19 @@ void setup() {
       ;
   }
 
-  BLE.setLocalName("Nano33BLE");                              // Set name for connection
-  BLE.setAdvertisedService(greetingService);                  // Advertise service
-  BLE.setAdvertisedService(accelerometerService);                 
-  greetingService.addCharacteristic(greetingCharacteristic);  // Add characteristic to service
+  BLE.setLocalName("Nano33BLE");  // Set name for connection
+
+  // BLE.setAdvertisedService(greetingService);                  // Advertise service
+  BLE.setAdvertisedService(accelerometerService);
+  // greetingService.addCharacteristic(greetingCharacteristic);  // Add characteristic to service
 
   accelerometerService.addCharacteristic(ble_accelerometer);  // Add accelerometer characteristic to service
 
-  BLE.addService(greetingService);                            // Add service
-  BLE.addService(accelerometerService);                            // Add service
-  greetingCharacteristic.setValue(greeting);                  // Set greeting string
+  // BLE.addService(greetingService);                            // Add service
+  BLE.addService(accelerometerService);  // Add service
+  // greetingCharacteristic.setValue(greeting);                  // Set greeting string
 
+  ble_accelerometer.writeValue("-1");
   BLE.advertise();  // Start advertising
   Serial.print("Peripheral device MAC: ");
   Serial.println(BLE.address());
@@ -171,7 +176,7 @@ void loop() {
     digitalWrite(LED_BUILTIN, HIGH);
 
     while (central.connected()) {
-      delay(200);
+      // delay(200);
 
       float x, y, z;
 
