@@ -42,6 +42,32 @@
 /* Includes ---------------------------------------------------------------- */
 #include <PDM.h>
 #include <projekat-2_inferencing.h>
+#include <ArduinoBLE.h>       // Bluetooth Library
+#include <Arduino_HTS221.h>   // Pressure Sensor Library
+#include <Arduino_LPS22HB.h>  // Temperature Sensor Library
+#include <Arduino_LSM9DS1.h>
+
+
+static const char *greeting = "Hello World!";
+
+BLEService greetingService("180C");  // User defined service
+BLEService accelerometerService("180D");  // User defined service 2
+
+// Initalizing global variables for sensor data to pass onto BLE
+String p, t, m, a;
+
+BLEStringCharacteristic greetingCharacteristic("2A56",        // standard 16-bit characteristic UUID
+                                               BLERead, 13);  // remote clients will only be able to read this
+
+// BLE Characteristics
+// Syntax: BLE<DATATYPE>Characteristic <NAME>(<UUID>, <PROPERTIES>, <DATA LENGTH>)
+BLEStringCharacteristic ble_pressure("2A56", BLERead | BLENotify, 13);
+BLEStringCharacteristic ble_temperature("2A57", BLERead | BLENotify, 13);
+// BLEStringCharacteristic ble_magnetic("2A58", BLERead | BLENotify, 20);
+BLEStringCharacteristic ble_accelerometer("2A58", BLERead | BLENotify, 20);
+
+// Function prototype
+// void readValues();
 
 /** Audio buffers, pointers and selectors */
 typedef struct {
@@ -67,93 +93,126 @@ void setup() {
   // comment out the below line to cancel the wait for USB connection (needed for native USB)
   while (!Serial)
     ;
-  Serial.println("Edge Impulse Inferencing Demo");
 
-  // summary of inferencing settings (from model_metadata.h)
-  ei_printf("Inferencing settings:\n");
-  ei_printf("\tInterval: %.2f ms.\n", (float)EI_CLASSIFIER_INTERVAL_MS);
-  ei_printf("\tFrame size: %d\n", EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE);
-  ei_printf("\tSample length: %d ms.\n", EI_CLASSIFIER_RAW_SAMPLE_COUNT / 16);
-  ei_printf("\tNo. of classes: %d\n", sizeof(ei_classifier_inferencing_categories) / sizeof(ei_classifier_inferencing_categories[0]));
+  Serial.println("STARTED");
 
-  run_classifier_init();
-  if (microphone_inference_start(EI_CLASSIFIER_SLICE_SIZE) == false) {
-    ei_printf("ERR: Could not allocate audio buffer (size %d), this could be due to the window length of your model\r\n", EI_CLASSIFIER_RAW_SAMPLE_COUNT);
-    return;
-  }
+  // Serial.println("Edge Impulse Inferencing Demo");
+
+  // // summary of inferencing settings (from model_metadata.h)
+  // ei_printf("Inferencing settings:\n");
+  // ei_printf("\tInterval: %.2f ms.\n", (float)EI_CLASSIFIER_INTERVAL_MS);
+  // ei_printf("\tFrame size: %d\n", EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE);
+  // ei_printf("\tSample length: %d ms.\n", EI_CLASSIFIER_RAW_SAMPLE_COUNT / 16);
+  // ei_printf("\tNo. of classes: %d\n", sizeof(ei_classifier_inferencing_categories) / sizeof(ei_classifier_inferencing_categories[0]));
+
+  // run_classifier_init();
+  // if (microphone_inference_start(EI_CLASSIFIER_SLICE_SIZE) == false) {
+  //   ei_printf("ERR: Could not allocate audio buffer (size %d), this could be due to the window length of your model\r\n", EI_CLASSIFIER_RAW_SAMPLE_COUNT);
+  //   return;
+  // }
 
   // Initialize pins as outputs
   pinMode(LEDR, OUTPUT);
   pinMode(LEDG, OUTPUT);
   pinMode(LEDB, OUTPUT);
+
+  pinMode(LED_BUILTIN, OUTPUT);  // initialize the built-in LED pin
+
+  if (!BLE.begin()) {  // initialize BLE
+    Serial.println("starting BLE failed!");
+    while (1)
+      ;
+  }
+
+  BLE.setLocalName("Nano33BLE");                              // Set name for connection
+  BLE.setAdvertisedService(greetingService);                  // Advertise service
+  BLE.setAdvertisedService(accelerometerService);                 
+  greetingService.addCharacteristic(greetingCharacteristic);  // Add characteristic to service
+
+  accelerometerService.addCharacteristic(ble_accelerometer);  // Add accelerometer characteristic to service
+
+  BLE.addService(greetingService);                            // Add service
+  BLE.addService(accelerometerService);                            // Add service
+  greetingCharacteristic.setValue(greeting);                  // Set greeting string
+
+  BLE.advertise();  // Start advertising
+  Serial.print("Peripheral device MAC: ");
+  Serial.println(BLE.address());
+  Serial.println("Waiting for connections...");
+
+  if (!IMU.begin()) {
+    Serial.println("Failed to initialize IMU!");
+    while (1)
+      ;
+  }
+
+  Serial.print("Accelerometer sample rate = ");
+  Serial.print(IMU.accelerationSampleRate());
+  Serial.println(" Hz");
+  Serial.println();
+  Serial.println("Acceleration in g's");
+  Serial.println("X\tY\tZ");
 }
 
 /**
  * @brief      Arduino main function. Runs the inferencing loop.
  */
 void loop() {
+  // listenToMicrophone();
 
-  // // WHITE
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, LOW);
+  BLEDevice central = BLE.central();  // Wait for a BLE central to connect
 
-  // // RED
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, HIGH);
+  // if a central is connected to the peripheral:
+  if (central) {
+    Serial.print("Connected to central MAC: ");
+    // print the central's BT address:
+    Serial.println(central.address());
+    // turn on the LED to indicate the connection:
+    digitalWrite(LED_BUILTIN, HIGH);
 
-  // // wait for a second
-  // delay(1000);
+    while (central.connected()) {
+      delay(200);
 
-  // // GREEN
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, HIGH);
+      float x, y, z;
 
-  // // wait for a second
-  // delay(1000);
+      if (IMU.accelerationAvailable()) {
+        IMU.readAcceleration(x, y, z);
 
-  // // BLUE
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, LOW);
+        Serial.print(x);
+        Serial.print('\t');
+        Serial.print(y);
+        Serial.print('\t');
+        Serial.println(z);
+        a = "X:" + String(x) + ", Y:" + String(y) + ", Z:" + String(z);
+        ble_accelerometer.writeValue(a);
+      }
 
-  // // wait for a second
-  // delay(1000);
+      // // Read values from sensors
+      // readValues();
 
-  // // YELLOW
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, HIGH);
+      // // Writing sensor values to the characteristic
+      // ble_pressure.writeValue(p);
+      // ble_temperature.writeValue(t);
+      // // ble_magnetic.writeValue(m);
 
-  // // wait for a second
-  // delay(1000);
+      // // Displaying the sensor values on the Serial Monitor
+      // Serial.println("Reading Sensors");
+      // Serial.println(p);
+      // Serial.println(t);
+      // Serial.println(m);
+      // Serial.println("\n");
+      // delay(1000);
+      // ei_printf("OVDE SAM 2");
+    }  // keep looping while connected
 
-  // // MAGENTA
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, LOW);
+    // when the central disconnects, turn off the LED:
+    digitalWrite(LED_BUILTIN, LOW);
+    Serial.print("Disconnected from central MAC: ");
+    Serial.println(central.address());
+  }
+}
 
-  // // wait for a second
-  // delay(1000);
-
-  // // CYAN
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, LOW);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // RGB OFF
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, HIGH);
-
-  // // wait for a second
-  // delay(1000);
-
+void listenToMicrophone() {
   bool m = microphone_inference_record();
   if (!m) {
     ei_printf("ERR: Failed to record audio...\n");
@@ -194,18 +253,34 @@ void checkKeyword(const char *label, float value, const char *keyword) {
     ei_printf("    %s: %.5f\n", label,
               value);
     if (value > 0.7) {
-      // GREEN
       digitalWrite(LEDR, HIGH);
       if (label == "dracarys") {
+        // GREEN
         digitalWrite(LEDG, LOW);
         digitalWrite(LEDB, HIGH);
       } else {
+        // BLUE
         digitalWrite(LEDG, HIGH);
         digitalWrite(LEDB, LOW);
       }
     }
   }
 }
+
+// void readValues() {
+//   // Reading raw sensor values from three sensors
+//   float x, y, z;
+//   float pressure = BARO.readPressure();
+//   float temperature = HTS.readTemperature();
+//   if (IMU.magneticFieldAvailable()) {
+//     IMU.readMagneticField(x, y, z);
+
+//     // Saving sensor values into a user presentable way with units
+//     p = String(pressure) + " kPa";
+//     t = String(temperature) + " C";
+//     m = "X:" + String(x) + ", Y:" + String(y);
+//   }
+// }
 
 /**
  * @brief      PDM buffer full callback
