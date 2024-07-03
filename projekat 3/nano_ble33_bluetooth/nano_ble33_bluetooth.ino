@@ -130,15 +130,14 @@ void setup() {
 
   BLE.setLocalName("Nano33BLE");  // Set name for connection
 
-  // BLE.setAdvertisedService(greetingService);                  // Advertise service
   BLE.setAdvertisedService(deviceService);
-  // greetingService.addCharacteristic(greetingCharacteristic);  // Add characteristic to service
 
   deviceService.addCharacteristic(ble_accelerometer);  // Add accelerometer characteristic to service
+  deviceService.addCharacteristic(ble_temperature);    // Add temperature characteristic to service
+  deviceService.addCharacteristic(ble_magnetic);       // Add magnetic characteristic to service
+  deviceService.addCharacteristic(ble_pressure);       // Add pressure characteristic to service
 
-  // BLE.addService(greetingService);                            // Add service
   BLE.addService(deviceService);  // Add service
-  // greetingCharacteristic.setValue(greeting);                  // Set greeting string
 
   ble_accelerometer.writeValue("-1");
   BLE.advertise();  // Start advertising
@@ -172,12 +171,6 @@ void loop() {
   if (start_bluetooth == false) {
     listenToMicrophone();
   } else {
-    // if (start_bluetooth == true) {
-    // ei_printf("Stopping the microphone inference\n");
-    // microphone_inference_end();
-    // ei_printf("Microphone inference successful\n");
-    // ei_printf("Bluetooth started\n");
-
     // if a central is connected to the peripheral:
     if (central) {
       Serial.print("Connected to central MAC: ");
@@ -203,13 +196,25 @@ void loop() {
           ble_accelerometer.writeValue(a);
         }
 
+        float pressure = BARO.readPressure();
+        float temperature = HTS.readTemperature();
+
+        if (IMU.magneticFieldAvailable()) {
+          IMU.readMagneticField(x, y, z);
+
+          // Saving sensor values into a user presentable way with units
+          p = String(pressure) + " kPa";
+          t = String(temperature) + " C";
+          m = "X:" + String(x) + ", Y:" + String(y);
+        }
+
         // // Read values from sensors
         // readValues();
 
-        // // Writing sensor values to the characteristic
-        // ble_pressure.writeValue(p);
-        // ble_temperature.writeValue(t);
-        // // ble_magnetic.writeValue(m);
+        // Writing sensor values to the characteristic
+        ble_pressure.writeValue(p);
+        ble_temperature.writeValue(t);
+        ble_magnetic.writeValue(m);
 
         // // Displaying the sensor values on the Serial Monitor
         // Serial.println("Reading Sensors");
