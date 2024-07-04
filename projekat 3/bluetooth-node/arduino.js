@@ -127,28 +127,28 @@ nano33ble.on("connected", (id) => {
   nano33ble.on("accelerometer", (data) => {
     console.log("Accelerometer:", data);
 
-    // client.publish("accelerometer", JSON.stringify(data));
+    client.publish("accelerometer", JSON.stringify(data));
     // data = JSON.stringify(data);
   });
 
   nano33ble.on("pressure", (data) => {
     console.log("pressure:", data);
 
-    // client.publish("accelerometer", JSON.stringify(data));
+    client.publish("pressure", JSON.stringify(data));
     // data = JSON.stringify(data);
   });
 
   nano33ble.on("temperature", (data) => {
     console.log("temperature:", data);
 
-    // client.publish("accelerometer", JSON.stringify(data));
+    client.publish("temperature", JSON.stringify(data));
     // data = JSON.stringify(data);
   });
 
   nano33ble.on("magnetometer", (data) => {
     console.log("magnetometer:", data);
 
-    // client.publish("accelerometer", JSON.stringify(data));
+    client.publish("magnetometer", JSON.stringify(data));
     // data = JSON.stringify(data);
   });
 });
