@@ -42,6 +42,7 @@
 /* Includes ---------------------------------------------------------------- */
 #include <PDM.h>
 #include <projekat-2_inferencing.h>
+#include <Arduino_APDS9960.h>
 
 /** Audio buffers, pointers and selectors */
 typedef struct {
@@ -86,74 +87,19 @@ void setup() {
   pinMode(LEDR, OUTPUT);
   pinMode(LEDG, OUTPUT);
   pinMode(LEDB, OUTPUT);
+
+
+  if (!APDS.begin()) {
+    Serial.println("Error initializing APDS9960 sensor!");
+  }
 }
+
+static bool start_reading_data = false;
 
 /**
  * @brief      Arduino main function. Runs the inferencing loop.
  */
 void loop() {
-
-  // // WHITE
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, LOW);
-
-  // // RED
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, HIGH);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // GREEN
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, HIGH);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // BLUE
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, LOW);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // YELLOW
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, HIGH);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // MAGENTA
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, LOW);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // CYAN
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, LOW);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // RGB OFF
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, HIGH);
-
-  // // wait for a second
-  // delay(1000);
-
   bool m = microphone_inference_record();
   if (!m) {
     ei_printf("ERR: Failed to record audio...\n");
@@ -187,22 +133,47 @@ void loop() {
 
     print_results = 0;
   }
+
+  if (start_reading_data == true) {
+    if (APDS.proximityAvailable()) {
+      int proximity = APDS.readProximity();
+      Serial.println(proximity);
+      if (proximity < 10) {
+        // RED
+        digitalWrite(LEDR, LOW);
+        digitalWrite(LEDG, HIGH);
+        digitalWrite(LEDB, HIGH);
+      } else if (proximity < 100) {
+        // YELLOW
+        digitalWrite(LEDR, LOW);
+        digitalWrite(LEDG, LOW);
+        digitalWrite(LEDB, HIGH);
+      } else if (proximity < 200) {
+        // GREEN
+        digitalWrite(LEDR, HIGH);
+        digitalWrite(LEDG, LOW);
+        digitalWrite(LEDB, HIGH);
+      } else {
+        // BLUE
+        digitalWrite(LEDR, HIGH);
+        digitalWrite(LEDG, HIGH);
+        digitalWrite(LEDB, LOW);
+      }
+    }
+  } else {
+    // MAGENTA
+    digitalWrite(LEDR, LOW);
+    digitalWrite(LEDG, HIGH);
+    digitalWrite(LEDB, LOW);
+  }
 }
 
 void checkKeyword(const char *label, float value, const char *keyword) {
   if (label == keyword) {
     ei_printf("    %s: %.5f\n", label,
               value);
-    if (value > 0.7) {
-      // GREEN
-      digitalWrite(LEDR, HIGH);
-      if (label == "dracarys") {
-        digitalWrite(LEDG, LOW);
-        digitalWrite(LEDB, HIGH);
-      } else {
-        digitalWrite(LEDG, HIGH);
-        digitalWrite(LEDB, LOW);
-      }
+    if (value > 0.8) {
+      start_reading_data = label == "hello";
     }
   }
 }
