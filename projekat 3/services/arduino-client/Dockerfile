@@ -9,8 +9,8 @@ COPY arduino-client/public/ /app/frontend/public
 COPY arduino-client/src/ /app/frontend/src
 COPY arduino-client/. /app/frontend/
 
-RUN npm install && npm run build && npm run preview
+RUN npm install && npm run build
 
 EXPOSE 4173
 
-CMD ["serve", "-l", "80", "-s", "build"]
+CMD ["npm", "run", "preview","--" ,"--host"]

@@ -66,7 +66,7 @@ export const WebSocketDemo = () => {
   if (lastMessage !== null) {
     const data = parseMessage(lastMessage);
 
-    messages.push({
+    messages.unshift({
       ...lastMessage,
       data
     });
@@ -91,11 +91,7 @@ export const WebSocketDemo = () => {
           Last message: {parseMessage(lastMessage)}
         </span>
       ) : null}
-      <ul>
-        {messages
-          .toReversed()
-          .map((message, idx) => generateView(message, idx))}
-      </ul>
+      <ul>{messages.map((message, idx) => generateView(message, idx))}</ul>
     </div>
   );
 };
