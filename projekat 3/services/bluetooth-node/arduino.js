@@ -2,20 +2,13 @@ const Nano33BLE = require("@vliegwerk/arduino-nano-33-ble");
 const mqtt = require("mqtt");
 const client = mqtt.connect("mqtt://test.mosquitto.org");
 
+process.setMaxListeners(1000);
 const nano33ble = new Nano33BLE({
-  enable: [
-    "accelerometer",
-    // "gyroscope",
-    "pressure",
-    "temperature",
-    "magnetometer"
-  ]
+  enable: ["accelerometer", "pressure", "temperature", "magnetometer"]
 });
 
-// nano33ble.characteristics.accelerometer.properties.push("BLERead");
 nano33ble.characteristics.accelerometer.uuid =
   "19b10010-e8f2-537e-4f6c-d104768a1214";
-// nano33ble.characteristics.accelerometer.structure = ["String"];
 nano33ble.characteristics.pressure.uuid =
   "19b10010-e8f2-537e-4f6c-d104768a1215";
 nano33ble.characteristics.temperature.uuid =

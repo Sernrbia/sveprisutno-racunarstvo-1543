@@ -1,12 +1,10 @@
 const mqtt = require("mqtt");
-// import {InfluxDB, Point} from '@influxdata/influxdb-client'
 const InfluxDB = require("@influxdata/influxdb-client").InfluxDB;
 const Point = require("@influxdata/influxdb-client").Point;
 const WebSocket = require("ws");
 require("dotenv").config();
 
 const token = process.env.INFLUXDB_TOKEN;
-// ("H6x1WKiBEbLDYrT8P5bm4XRHG8UvbqQusVxj_Tdd9IvM9Tctq8axxvENwvCZlcpmtZx4vZY5Xb6-zXb7GzRPpA==");
 const url = `http://influxdb:${process.env.INFLUXDB_PORT}`;
 
 const influxDB = new InfluxDB({
@@ -14,8 +12,8 @@ const influxDB = new InfluxDB({
   token
 });
 
-let org = `sernrbia`;
-let bucket = `sveprisutno`;
+const org = process.env.INFLUXDB_ORGANIZATION;
+const bucket = process.env.INFLUXDB_BUCKET;
 
 const queryApi = influxDB.getQueryApi(org);
 const fluxQuery = `from(bucket:"${bucket}") |> range(start: 0) |> filter(fn: (r) => r._measurement == "arduino")`;
@@ -24,7 +22,7 @@ let writeClient = influxDB.getWriteApi(org, bucket, "ns");
 
 const wss = new WebSocket.Server({ port: 8090 });
 
-var msg;
+let msg;
 
 wss.on("connection", async function connection(ws) {
   ws.on("message", function incoming(message) {
@@ -76,7 +74,6 @@ client.on("connect", () => {
 client.on("message", (topic, message) => {
   // message is Buffer
   const data = JSON.parse(message.toString());
-  console.log("DATA", data);
 
   if (data.temperatures == null && typeof data === "object") {
     const point = new Point("arduino");

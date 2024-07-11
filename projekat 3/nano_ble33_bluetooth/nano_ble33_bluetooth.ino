@@ -207,22 +207,11 @@ void loop() {
           t = String(temperature) + " C";
           m = "X:" + String(x) + ", Y:" + String(y);
         }
-
-        // // Read values from sensors
-        // readValues();
-
+        
         // Writing sensor values to the characteristic
         ble_pressure.writeValue(p);
         ble_temperature.writeValue(t);
         ble_magnetic.writeValue(m);
-
-        // // Displaying the sensor values on the Serial Monitor
-        // Serial.println("Reading Sensors");
-        // Serial.println(p);
-        // Serial.println(t);
-        // Serial.println(m);
-        // Serial.println("\n");
-        // delay(1000);
       }  // keep looping while connected
 
       // when the central disconnects, turn off the LED:

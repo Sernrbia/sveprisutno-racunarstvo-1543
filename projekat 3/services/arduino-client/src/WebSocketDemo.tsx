@@ -1,10 +1,13 @@
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
+const formatTime = (time: Date): string =>
+  `${time.getFullYear()}-${time.getMonth()}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}.${time.getMilliseconds()}`;
+
 const parseMessage = (message: MessageEvent): string => {
   const data = JSON.parse(message.data);
   const time = new Date(data._time);
   const obj = {
-    time: `${time.getFullYear()}-${time.getMonth()}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}.${time.getMilliseconds()}`,
+    time: formatTime(time),
     type: data.type,
     measurement: data._measurement,
     field: data._field,
@@ -47,21 +50,10 @@ const generateView = (message: MessageEvent, idx: number): JSX.Element => {
     </div>
   );
 };
+const socketUrl = "http://127.0.0.1:8090";
 const messages: MessageEvent[] = [];
 export const WebSocketDemo = () => {
-  //Public API that will echo messages sent to it back to the client
-  const socketUrl = "http://127.0.0.1:8090";
-  // const [messageHistory, setMessageHistory] = useState<MessageEvent<any>[]>([]);
-
   const { lastMessage, readyState } = useWebSocket(socketUrl);
-
-  // useEffect(() => {
-  //   if (lastMessage !== null) {
-  //     const data = JSON.parse(lastMessage.data);
-  //     console.log(data.type);
-  //     setMessageHistory((prev) => prev.concat(lastMessage));
-  //   }
-  // }, [lastMessage]);
 
   if (lastMessage !== null) {
     const data = parseMessage(lastMessage);
