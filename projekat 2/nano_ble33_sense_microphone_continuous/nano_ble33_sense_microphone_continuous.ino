@@ -92,68 +92,6 @@ void setup() {
  * @brief      Arduino main function. Runs the inferencing loop.
  */
 void loop() {
-
-  // // WHITE
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, LOW);
-
-  // // RED
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, HIGH);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // GREEN
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, HIGH);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // BLUE
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, LOW);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // YELLOW
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, HIGH);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // MAGENTA
-  // digitalWrite(LEDR, LOW);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, LOW);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // CYAN
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, LOW);
-  // digitalWrite(LEDB, LOW);
-
-  // // wait for a second
-  // delay(1000);
-
-  // // RGB OFF
-  // digitalWrite(LEDR, HIGH);
-  // digitalWrite(LEDG, HIGH);
-  // digitalWrite(LEDB, HIGH);
-
-  // // wait for a second
-  // delay(1000);
-
   bool m = microphone_inference_record();
   if (!m) {
     ei_printf("ERR: Failed to record audio...\n");
@@ -189,11 +127,13 @@ void loop() {
   }
 }
 
+static float THRESHOLD = 0.7;
+
 void checkKeyword(const char *label, float value, const char *keyword) {
   if (label == keyword) {
     ei_printf("    %s: %.5f\n", label,
               value);
-    if (value > 0.7) {
+    if (value > THRESHOLD) {
       // GREEN
       digitalWrite(LEDR, HIGH);
       if (label == "dracarys") {
