@@ -125,7 +125,7 @@ void loop() {
     ei_printf(": \n");
     for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
       checkKeyword(result.classification[ix].label, result.classification[ix].value, "dracarys");
-      checkKeyword(result.classification[ix].label, result.classification[ix].value, "hello");
+      checkKeyword(result.classification[ix].label, result.classification[ix].value, "stop");
     }
 #if EI_CLASSIFIER_HAS_ANOMALY == 1
     ei_printf("    anomaly score: %.3f\n", result.anomaly);
@@ -168,12 +168,10 @@ void loop() {
   }
 }
 
-static float THRESHOLD = 0.7;
-
 void checkKeyword(const char *label, float value, const char *keyword) {
   if (label == keyword && value > 0.8) {
     // ei_printf("    %s: %.5f\n", label, value);
-    start_reading_data = label == "hello";
+    start_reading_data = label == "dracarys";
   }
 }
 
