@@ -4,13 +4,19 @@ Ispitni zadaci iz predmeta Sveprisutno računarstvo na Master studijama Elektron
 
 # Projekat 1
 
+## Opis
+
 Istraživanje na temu ThinEdge servisa.
 
 # Projekat 2
 
+## Opis
+
 Prepoznavanje komandi korišćenjem Arduino Nano BLE 33 uredjaja i čitanje sa senzora blizine.
 
 # Projekat 3
+
+## Opis
 
 Proširenje projekta 2, podaci sa senzora akcelerometra, magnetometra, temperature i pritiska se šalju Bluetooth servisu.
 
