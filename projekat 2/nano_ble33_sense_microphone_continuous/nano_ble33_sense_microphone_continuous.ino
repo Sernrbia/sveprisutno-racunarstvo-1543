@@ -42,6 +42,7 @@
 /* Includes ---------------------------------------------------------------- */
 #include <PDM.h>
 #include <projekat-2_inferencing.h>
+#include <Arduino_APDS9960.h>
 
 /** Audio buffers, pointers and selectors */
 typedef struct {
@@ -86,7 +87,14 @@ void setup() {
   pinMode(LEDR, OUTPUT);
   pinMode(LEDG, OUTPUT);
   pinMode(LEDB, OUTPUT);
+
+
+  if (!APDS.begin()) {
+    Serial.println("Error initializing APDS9960 sensor!");
+  }
 }
+
+static bool start_reading_data = false;
 
 /**
  * @brief      Arduino main function. Runs the inferencing loop.
@@ -125,6 +133,39 @@ void loop() {
 
     print_results = 0;
   }
+
+  if (start_reading_data == true) {
+    if (APDS.proximityAvailable()) {
+      int proximity = APDS.readProximity();
+      Serial.println(proximity);
+      if (proximity < 10) {
+        // RED
+        digitalWrite(LEDR, LOW);
+        digitalWrite(LEDG, HIGH);
+        digitalWrite(LEDB, HIGH);
+      } else if (proximity < 100) {
+        // YELLOW
+        digitalWrite(LEDR, LOW);
+        digitalWrite(LEDG, LOW);
+        digitalWrite(LEDB, HIGH);
+      } else if (proximity < 200) {
+        // GREEN
+        digitalWrite(LEDR, HIGH);
+        digitalWrite(LEDG, LOW);
+        digitalWrite(LEDB, HIGH);
+      } else {
+        // BLUE
+        digitalWrite(LEDR, HIGH);
+        digitalWrite(LEDG, HIGH);
+        digitalWrite(LEDB, LOW);
+      }
+    }
+  } else {
+    // MAGENTA
+    digitalWrite(LEDR, LOW);
+    digitalWrite(LEDG, HIGH);
+    digitalWrite(LEDB, LOW);
+  }
 }
 
 static float THRESHOLD = 0.7;
@@ -133,6 +174,7 @@ void checkKeyword(const char *label, float value, const char *keyword) {
   if (label == keyword) {
     ei_printf("    %s: %.5f\n", label,
               value);
+<<<<<<< HEAD
     if (value > THRESHOLD) {
       // GREEN
       digitalWrite(LEDR, HIGH);
@@ -143,6 +185,10 @@ void checkKeyword(const char *label, float value, const char *keyword) {
         digitalWrite(LEDG, HIGH);
         digitalWrite(LEDB, LOW);
       }
+=======
+    if (value > 0.8) {
+      start_reading_data = label == "hello";
+>>>>>>> c243cd0d6c6a7a168dbe3306513f291237f18b2f
     }
   }
 }
