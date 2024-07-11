@@ -1,9 +1,8 @@
-version: "2"
 services:
   influxdb:
     image: influxdb:latest
     ports:
-      - "8086:8086"
+      - ${INFLUXDB_PORT}:${INFLUXDB_PORT}
     volumes:
       - influxdb-storage:/var/lib/influxdb
     environment:
@@ -40,12 +39,36 @@ services:
       dockerfile: ./data-reader/Dockerfile
     image: "data-reader"
     ports:
-      - ${BLUETOOTH_NODE_PORT}:${BLUETOOTH_NODE_PORT}
+      - ${DATA_READER_PORT}:${DATA_READER_PORT}
     restart: always
     env_file:
       - .env
     depends_on:
       - influxdb
+  arduino-client:
+    build:
+      context: ./
+      dockerfile: ./arduino-client/Dockerfile
+    image: "arduino-client"
+    ports:
+      - 4173:4173
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - data-reader
+  # bluetooth-node:
+  #   build:
+  #     context: ./
+  #     dockerfile: ./bluetooth-node/Dockerfile
+  #   image: "bluetooth-node"
+  #   ports:
+  #     - ${BLUETOOTH_NODE_PORT}:${BLUETOOTH_NODE_PORT}
+  #   restart: always
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - influxdb
 volumes:
   influxdb-storage:
   chronograf-storage:

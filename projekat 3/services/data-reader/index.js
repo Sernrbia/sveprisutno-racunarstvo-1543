@@ -2,10 +2,12 @@ const mqtt = require("mqtt");
 // import {InfluxDB, Point} from '@influxdata/influxdb-client'
 const InfluxDB = require("@influxdata/influxdb-client").InfluxDB;
 const Point = require("@influxdata/influxdb-client").Point;
+const WebSocket = require("ws");
+require("dotenv").config();
 
-const token =
-  "7v7EG1rsJjU19YeqgUYB_jOWZsYGLRnMcIwwAJt5_qi59ML-LRiLqcytBkRkENoOGcVFlj7J7XQmFbEuw6jvRw==";
-const url = "http://influxdb:8086";
+const token = process.env.INFLUXDB_TOKEN;
+// ("H6x1WKiBEbLDYrT8P5bm4XRHG8UvbqQusVxj_Tdd9IvM9Tctq8axxvENwvCZlcpmtZx4vZY5Xb6-zXb7GzRPpA==");
+const url = `http://influxdb:${process.env.INFLUXDB_PORT}`;
 
 const influxDB = new InfluxDB({
   url,
@@ -15,21 +17,35 @@ const influxDB = new InfluxDB({
 let org = `sernrbia`;
 let bucket = `sveprisutno`;
 
+const queryApi = influxDB.getQueryApi(org);
+const fluxQuery = `from(bucket:"${bucket}") |> range(start: 0) |> filter(fn: (r) => r._measurement == "arduino")`;
+
 let writeClient = influxDB.getWriteApi(org, bucket, "ns");
 
-// for (let i = 0; i < 5; i++) {
-//   let point = new Point("measurement1")
-//     .tag("tagname1", "tagvalue1")
-//     .floatField("temperature", i);
+const wss = new WebSocket.Server({ port: 8090 });
 
-//   void setTimeout(() => {
-//     writeClient.writePoint(point);
-//   }, i * 1000); // separate points by 1 second
+var msg;
 
-//   void setTimeout(() => {
-//     writeClient.flush();
-//   }, 5000);
-// }
+wss.on("connection", async function connection(ws) {
+  ws.on("message", function incoming(message) {
+    msg = message;
+    console.log("received: %s", msg);
+    wss.clients.forEach(function (client) {
+      if (client.readyState == WebSocket.OPEN) {
+        client.send(msg);
+      }
+    });
+  });
+
+  for await (const { values, tableMeta } of queryApi.iterateRows(fluxQuery)) {
+    const o = tableMeta.toObject(values);
+    console.log(
+      `${o._time} ${o._measurement} in '${o.location}' (${o.sensor_id}): ${o._field}=${o._value}`
+    );
+
+    ws.send(JSON.stringify(o));
+  }
+});
 
 const client = mqtt.connect("mqtt://test.mosquitto.org");
 
