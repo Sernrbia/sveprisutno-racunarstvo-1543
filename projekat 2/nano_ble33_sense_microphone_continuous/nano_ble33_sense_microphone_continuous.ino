@@ -171,25 +171,9 @@ void loop() {
 static float THRESHOLD = 0.7;
 
 void checkKeyword(const char *label, float value, const char *keyword) {
-  if (label == keyword) {
-    ei_printf("    %s: %.5f\n", label,
-              value);
-<<<<<<< HEAD
-    if (value > THRESHOLD) {
-      // GREEN
-      digitalWrite(LEDR, HIGH);
-      if (label == "dracarys") {
-        digitalWrite(LEDG, LOW);
-        digitalWrite(LEDB, HIGH);
-      } else {
-        digitalWrite(LEDG, HIGH);
-        digitalWrite(LEDB, LOW);
-      }
-=======
-    if (value > 0.8) {
-      start_reading_data = label == "hello";
->>>>>>> c243cd0d6c6a7a168dbe3306513f291237f18b2f
-    }
+  if (label == keyword && value > 0.8) {
+    // ei_printf("    %s: %.5f\n", label, value);
+    start_reading_data = label == "hello";
   }
 }
 
